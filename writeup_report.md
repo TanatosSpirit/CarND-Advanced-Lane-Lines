@@ -23,8 +23,9 @@ The goals / steps of this project are the following:
 [image2]: ./output_images/undistort-images.jpg "Undistorted Images"
 [image3]: ./output_images/binary-image.jpg "Binary Example"
 [image4]: ./output_images/roi-warp.jpg "Warp Example"
-[image5]: ./examples/color_fit_lines.jpg "Fit Visual"
-[image6]: ./output_images/output.jpg "Output"
+[image5]: ./output_images/sliding-window.jpg "sliding-window"
+[image6]: ./output_images/lane.jpg "lane"
+[image7]: ./output_images/output.jpg "Output"
 [video1]: ./project_video_output.mp4 "Video"
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/571/view) Points
@@ -60,7 +61,7 @@ To demonstrate this step, I will describe how I apply the distortion correction 
 
 #### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 
-I used a combination of color and gradient thresholds to generate a binary image (9th code cells of the IPython notebook located in "advanced_line_finding_code.ipynb").  Here's an example of my output for this step.
+I used a combination of color and gradient thresholds to generate a binary image (8th code cells of the IPython notebook located in "advanced_line_finding_code.ipynb").  Here's an example of my output for this step.
 
 ![alt text][image3]
 
@@ -69,14 +70,17 @@ I used a combination of color and gradient thresholds to generate a binary image
 The code for my perspective transform includes a function called `warper()`, which contained in the 4th code cells of the IPython notebook located in "advanced_line_finding_code.ipynb".  The `warper()` function takes as inputs an image (`img`), as well as source (`src`) and destination (`dst`) points.  I chose the hardcode the source and destination points in the following manner:
 
 ```python
-left_bot = [150,720]
-right_bot = [1250,720] 
-left_top = [590,450]
-right_top = [700,450]
+src = np.float32(
+    [[(img_size[0] / 2) - 58, img_size[1] / 2 + 100],
+    [((img_size[0] / 6) - 10), img_size[1]],
+    [(img_size[0] * 5 / 6) + 40, img_size[1]],
+    [(img_size[0] / 2 + 60), img_size[1] / 2 + 100]]) 
 
-src=np.float32([left_bot,left_top,right_top,right_bot])
-
-dst= np.float32([[200 ,720], [200  ,0], [980 ,0], [980 ,720]])
+dst = np.float32(
+    [[(img_size[0] / 4), 0],
+    [(img_size[0] / 4), img_size[1]],
+    [(img_size[0] * 3 / 4), img_size[1]],
+    [(img_size[0] * 3 / 4), 0]])       
 
 ```
 
@@ -86,15 +90,26 @@ I verified that my perspective transform was working as expected by drawing the 
 
 #### 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
 
-Then I did some other stuff and fit my lane lines with a 2nd order polynomial kinda like this:
+The first step is to create a Histogram of lower half of the image (10th code cells of the IPython notebook located in "advanced_line_finding_code.ipynb"). With this way we are able to find out a distinction between the left lane pixels and right lane pixels.
+
+The next step is to initiate a Sliding Window Search in the left and right parts (12th code cells of the IPython notebook located in "advanced_line_finding_code.ipynb"). The sliding window is applied in following steps:
+
+1. The left and right base points are calculated from the histogram.
+2. Then we calculate the position of all non zero x and non zero y pixels.
+3. Then we Start iterating over the windows.
+4. Then we identify the non zero pixels in the window we just defined
+5. Then we collect all the indices in the list and decide the center of next window using these points
+6. Once we are done, we seperate the points to left and right positions
+7. We then fit a second degree polynomial using np.polyfit and point calculate in step 6.
 
 ![alt text][image5]
+![alt text][image6]
 
 #### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
 I did this in the 14th code cells of the IPython notebook located in "advanced_line_finding_code.ipynb" or part "Step 12- Calculate Radius and Distance" in the function `CalculateRadiusOfCurvature()` .
 
-To calculate Radius-:
+To calculate Radius:
 
 1. We define values to convert pixels to meters
 2. Plot the left and right lines
@@ -107,7 +122,7 @@ To calculate Distance: We take the mean of the left bottom most point of the lef
 
 I implemented this step in the 13th code cells of the IPython notebook located in "advanced_line_finding_code.ipynb" or part "Step 11 - Unwarp" in the function `DrawLine()`.  Here is an example of my result on a test image:
 
-![alt text][image6]
+![alt text][image7]
 
 ---
 
@@ -115,7 +130,7 @@ I implemented this step in the 13th code cells of the IPython notebook located i
 
 #### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
-Here's a [link to my video result](./project_video.mp4) or [youtube](https://www.youtube.com/watch?v=BC-HsZC2z8Q&feature=youtu.be).
+Here's a [link to my video result](./project_video.mp4) or [youtube](https://youtu.be/TUxMM0tyMzI).
 
 ---
 
